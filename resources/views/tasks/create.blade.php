@@ -21,6 +21,16 @@
                 @error('description') {{ $message }} @enderror
             </fieldset>
 
+            <fieldset class="fieldset">
+                <legend>User</legend>
+                <select name="user[]" id="user" multiple class="border">
+                    @foreach($users as $user)
+                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @endforeach
+                </select>
+                @error('user') {{ $message }} @enderror
+            </fieldset>
+
             <button type="submit" class="btn btn-primary">Aufgabe anlegen</button>
         </form>
     </div>

@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Task extends Model
 {
-    protected $fillable = ['title', 'description', 'done', 'user_id'];
+    protected $fillable = ['title', 'description', 'done'];
 
-    public function user()
+    public function users()
     {
-        return $this->belongsTo(User::class);
+//        return $this->belongsTo(User::class);             // 1:n
+        return $this->belongsToMany(User::class);    // n:m
     }
 
     //scopeSearch im Model -> search()

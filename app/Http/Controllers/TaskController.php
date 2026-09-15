@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
@@ -14,26 +16,26 @@ class TaskController extends Controller
         // }
 
         //dd zur anzeige des kompletten sql strings
-    //     dd(Task::latest()
-    //     ->when($request->filled('q'), function ($query) use($request){
-    //         $term = '%' . $request->input('q') . '%';
+        //     dd(Task::latest()
+        //     ->when($request->filled('q'), function ($query) use($request){
+        //         $term = '%' . $request->input('q') . '%';
 
-    //    $query->where(function ($q) use ($term) {
-    //    $q->where('title', 'like', $term)->orWhere('description', 'like', $term);
-    //    });
-    //     })->toRawSql());
+        //    $query->where(function ($q) use ($term) {
+        //    $q->where('title', 'like', $term)->orWhere('description', 'like', $term);
+        //    });
+        //     })->toRawSql());
 
         $tasks = Task::latest()
-        ->when($request->filled('q'), function ($query) use($request){
-           $query->search($request->input('q'));
-        })
-        ->when($request->input('status') === 'open', function($query){
-            $query->where('done', false);
-        })
-        ->when($request->input('status') === 'done', function($query){
-            $query->where('done', true);
-        })
-        ->paginate(5)->withQueryString();
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $query->search($request->input('q'));
+            })
+            ->when($request->input('status') === 'open', function ($query) {
+                $query->where('done', false);
+            })
+            ->when($request->input('status') === 'done', function ($query) {
+                $query->where('done', true);
+            })
+            ->paginate(5)->withQueryString();
         return view('tasks.index', ['tasks' => $tasks]); //pfadstrukturen mit . nicht mit /
     }
 
@@ -42,25 +44,30 @@ class TaskController extends Controller
         // if(! auth()->check()) {
         //     return redirect()->route('login'); // Redirect für nicht authorisierte user
         // }
-        
-        return view('tasks.show', compact('task'));  //return view('tasks.show', ['task' => $task]); 
+
+        return view('tasks.show', compact('task'));  //return view('tasks.show', ['task' => $task]);
     }
 
     public function create()
     {
-        return view('tasks.create');
+        $users = User::all();
+        return view('tasks.create', compact('users'));
     }
 
     public function store(Request $request)
     {
+//        dd($request->user);
         $validated = $request->validate([
-            'title'         => ['required', 'string', 'max:50'],
-            'description'   => ['required', 'string', 'max:500'],
+            'title' => ['required', 'string', 'max:50'],
+            'description' => ['required', 'string', 'max:500'],
+            'user' => ['required'],
         ]);
-        $validated['user_id'] = auth()->id(); // Der aktuell eingeloggte User
+//        $validated['user_id'] = auth()->id(); // Der aktuell eingeloggte User
         $validated['done'] = false;
 
-        Task::create($validated);
+        $task = Task::create($validated);
+        // für das Schreiben in die Zwischentabelle mit Eloquent
+        $task->users()->attach($request->user);
 
         return redirect()->route('dashboard')->with('success', 'Aufgabe erfolgreich angelegt');
     }
@@ -68,13 +75,15 @@ class TaskController extends Controller
     public function edit(Task $task)
     {
         // muss in edit, update, destroy und toggle, da sonst gefälschte anfragen durchgehen würden
-        abort_if($task->user_id !== auth()->id(), 404);
-        return view('tasks.edit', compact('task'));
+//        abort_if($task->user_id !== auth()->id(), 404);
+        Gate::authorize('task-view', $task); // $task ist die zugewiesene Aufgabe für den eingeloggten User
+        $users = User::all();
+        return view('tasks.edit', compact('task', 'users'));
     }
 
     public function update(Request $request, Task $task)
     {
-        abort_if($task->user_id !== auth()->id(), 404);
+        Gate::authorize('task-view', $task);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:50'],
             'description' => ['required', 'string', 'max:500']
@@ -87,19 +96,19 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
-        abort_if($task->user_id !== auth()->id(), 404);
+//        abort_if($task->user_id !== auth()->id(), 404);
+        Gate::authorize('task-view', $task);
         $task->delete();
 
         return redirect()->route('dashboard')->with('success', 'Aufgabe gelöscht');
     }
 
 
-
     public function toggle(Task $task)
     {
         //nur der Ersteller darf seine Aufgabe umschalten
-        abort_if($task->user_id !== auth()->id(), 403);
-
+//        abort_if($task->user_id !== auth()->id(), 403);
+        Gate::authorize('task-view', $task);
         $task->done = !$task->done;
         $task->save();
 
