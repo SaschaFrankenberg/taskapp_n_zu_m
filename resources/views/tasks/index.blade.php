@@ -26,6 +26,13 @@
         @endif
     @endforelse
 
+    
+            <ul>
+                @foreach ($task->users as $user)
+                    <li>{{ $user->name }}</li>
+                @endforeach
+            </ul>
+
     {{ $tasks->links() }}
 
 </x-layout>

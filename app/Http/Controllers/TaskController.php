@@ -41,15 +41,13 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        // if(! auth()->check()) {
-        //     return redirect()->route('login'); // Redirect für nicht authorisierte user
-        // }
-
+        $task->load('users');
+        dd($task->users);
         return view('tasks.show', compact('task'));  //return view('tasks.show', ['task' => $task]);
     }
 
     public function create()
-    {
+    {   
         $users = User::all();
         return view('tasks.create', compact('users'));
     }
