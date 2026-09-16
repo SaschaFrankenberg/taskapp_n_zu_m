@@ -11,20 +11,6 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
-        // if(! auth()->check()) {
-        //     return redirect()->route('login'); // Redirect für nicht authorisierte user
-        // }
-
-        //dd zur anzeige des kompletten sql strings
-        //     dd(Task::latest()
-        //     ->when($request->filled('q'), function ($query) use($request){
-        //         $term = '%' . $request->input('q') . '%';
-
-        //    $query->where(function ($q) use ($term) {
-        //    $q->where('title', 'like', $term)->orWhere('description', 'like', $term);
-        //    });
-        //     })->toRawSql());
-
         $tasks = Task::latest()
             ->when($request->filled('q'), function ($query) use ($request) {
                 $query->search($request->input('q'));
@@ -36,18 +22,17 @@ class TaskController extends Controller
                 $query->where('done', true);
             })
             ->paginate(5)->withQueryString();
-        return view('tasks.index', ['tasks' => $tasks]); //pfadstrukturen mit . nicht mit /
+        return view('tasks.index', ['tasks' => $tasks]); // Pfadstrukturen mit . nicht mit /
     }
 
     public function show(Task $task)
     {
         $task->load('users');
-        dd($task->users);
         return view('tasks.show', compact('task'));  //return view('tasks.show', ['task' => $task]);
     }
 
     public function create()
-    {   
+    {
         $users = User::all();
         return view('tasks.create', compact('users'));
     }

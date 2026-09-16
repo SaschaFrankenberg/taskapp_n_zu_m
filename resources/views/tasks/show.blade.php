@@ -1,7 +1,5 @@
 <x-layout title="{{ $task->title }}">
 
-
-
     <article class="card mt-4 bg-base-100 shadow-sm">
         <div class="card-body">
             <div class="flex items-center justify-between gap-4">
