@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
 
 Route::get('/dbtest', function () {
-//    $users = DB::table('users')->get();           // Collections
-//    $users = DB::select('SELECT * FROM users');   // Array
+    //    $users = DB::table('users')->get();           // Collections
+    //    $users = DB::select('SELECT * FROM users');   // Array
     $users = User::get();
     $users_id = $users->pluck('id')->toArray();     // pluck macht eine Collection ->toArray wandelt es in ein Array um
     $id = Arr::random($users_id);
-//    return dump($id);
-//    return $users;
+    //    return dump($id);
+    //    return $users;
     return fake()->address();
 });
 
@@ -39,6 +39,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/notifications/{id}', function ($id) {
+        $notification = auth()->user()->unreadNotifications->firstWhere('id', $id);
+        $notification->markAsRead();
+        return back();
+    });
 });
 
 
