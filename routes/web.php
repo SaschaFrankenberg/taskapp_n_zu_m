@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\UserImageController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,9 @@ Route::middleware('auth')->group(function () {
     // Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     // Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::patch('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
+
     Route::resource('tasks', TaskController::class);
+    Route::resource('userimages', UserImageController::class);
 
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     //Dashboard
@@ -45,6 +48,14 @@ Route::middleware('auth')->group(function () {
         $notification->markAsRead();
         return back();
     });
+
+    Route::get('/userimages', function () {
+        $users = User::all();
+        return view('userimages.index', compact('users'));
+    })->name('userimages');
+
+    Route::get('/userimages/{user}/create', [UserImageController::class, 'create'])->name('userimages.create');
+    Route::post('/userimages/{user}' , [UserImageController::class, 'store'])->name('userimages.store');
 });
 
 
